@@ -1,0 +1,90 @@
+# openenv.yaml
+name: automated-tier1-support-desk
+version: "1.0.0"
+description: >
+  A simulated Tier-1 customer support environment where an AI agent must
+  resolve user tickets by querying a knowledge base, identifying correct
+  policies, and responding with accurate, policy-grounded resolutions.
+  Rewards partial progress and penalizes hallucination, over-escalation,
+  and contradictory responses.
+
+author: Swastika8
+repository: https://github.com/Swastika8/Solution-Meta.git
+space: https://huggingface.co/spaces/Swastika137/SupportDesk
+
+tags:
+  - support-desk
+  - customer-service
+  - knowledge-base
+  - tool-use
+  - multi-turn
+  - real-world
+
+environment:
+  entry_point: env.py
+  class: SupportDeskEnv
+  max_turns: 10
+  timeout_seconds: 1200  # 20 minutes
+
+tasks:
+  - id: task_easy
+    name: Password Reset Request
+    difficulty: easy
+    file: tasks.py
+    class: EasyTask
+  - id: task_medium
+    name: Billing Dispute with Partial Credit
+    difficulty: medium
+    file: tasks.py
+    class: MediumTask
+  - id: task_hard
+    name: Multi-Issue Technical Complaint with Escalation Decision
+    difficulty: hard
+    file: tasks.py
+    class: HardTask
+
+action_space:
+  - type: search_kb
+    description: Query the knowledge base with a search string
+    fields:
+      - query: string
+  - type: respond_to_user
+    description: Send a message to the user as the support agent
+    fields:
+      - message: string
+  - type: apply_resolution
+    description: Apply a formal resolution code from the knowledge base
+    fields:
+      - resolution_code: string
+      - summary: string
+  - type: escalate
+    description: Escalate the ticket to Tier-2 support with a reason
+    fields:
+      - reason: string
+
+observation_space:
+  ticket: object        # id, subject, body, user_history
+  kb_results: list      # List of KB articles returned by search_kb
+  conversation: list    # Full agent-user turn history
+  turn: integer         # Current turn number
+  resolved: boolean     # Whether the ticket has been resolved
+
+reward:
+  range: [0.0, 1.0]
+  partial_credit: true
+  penalties:
+    hallucinated_policy: -0.3
+    unnecessary_escalation: -0.2
+    contradicts_kb: -0.4
+    exceeded_turns: -0.1
+    repeated_info_request: -0.1
+  milestones:
+    kb_searched: +0.2
+    correct_policy_identified: +0.5
+    resolved_correctly: +1.0
+
+runtime:
+  cpu: 2
+  memory_gb: 8
+  python: "3.11"
+  base_image: python:3.11-slim
