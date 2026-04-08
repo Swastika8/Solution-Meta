@@ -125,3 +125,23 @@ Simulated JSON database inside `env.py` with realistic policies:
 ### 1. Install dependencies
 ```bash
 pip install -r requirements.txt
+
+
+---Set environment Variables
+```bash
+export API_BASE_URL=https://api.openai.com/v1
+export MODEL_NAME=gpt-4o-mini
+export OPENAI_API_KEY=your_key_here
+
+--Run Interference
+```bash
+python inference.py --task task_easy
+
+--Structured Loggin
+[START] task_id=<id> model=<model> timestamp=<ISO>
+[STEP] turn=<n> action=<type> input=<json> output=<json> reward=<float> cumulative=<float>
+[END] task_id=<id> final_score=<float> turns=<n> status=<resolved|failed|escalated>
+
+--Docker Usage
+docker build -t support-desk .
+docker run -e OPENAI_API_KEY=your_key support-desk
